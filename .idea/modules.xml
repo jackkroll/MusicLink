@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/SpotifyLinkDiscoBot.iml" filepath="$PROJECT_DIR$/.idea/SpotifyLinkDiscoBot.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/SpotifyLinkDiscBot.iml" filepath="$PROJECT_DIR$/.idea/SpotifyLinkDiscBot.iml" />
     </modules>
   </component>
 </project>
