@@ -11,7 +11,7 @@ intents.message_content = True
 intents.reactions = True
 
 
-client = discord.Client(intents=intents)
+bot = discord.Bot(intents=intents)
 
 load_dotenv()
 
@@ -49,31 +49,29 @@ def findURLS(link) -> {str:str}:
             break
         return songURLs
 
-@client.event
+@bot.event
 async def on_ready():
-    print(f'We have logged in as {client.user}')
+    print(f'Logged in as {bot.user}')
 
-@client.event
+@bot.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
     links = findLink(message)
     if len(links) != 0:
         await message.add_reaction("🔗")
 
-@client.event
+@bot.event
 async def on_reaction_add(reaction, user):
-    if reaction.emoji == "🔗" and user != client.user:
+    if reaction.emoji == "🔗" and user != bot.user:
         if worthySearch(reaction.message):
             async with reaction.message.channel.typing():
                 links = findLink(reaction.message)
-                print(f"{len(links)}")
                 embeds = []
                 for link in links:
                     urls = findURLS(link)
                     urllib.request.urlretrieve(urls["thumbnailURL"], "thumbnail.png")
                     recColor = ColorThief('thumbnail.png').get_color(quality=1)
-                    print(recColor)
                     embed = discord.Embed(color= discord.Color.from_rgb(recColor[0],recColor[1],recColor[2]), title= "Music Links", footer= discord.EmbedFooter(text = "Powered by Songlink"))
                     desc = ""
                     for platform in urls:
@@ -93,6 +91,45 @@ async def on_reaction_add(reaction, user):
                     embeds.append(embed)
                     embed.set_thumbnail(url=urls["thumbnailURL"])
             await reaction.message.reply(embeds = embeds)
-
-
-client.run(token)
+class ManagePlatformsView(discord.ui.View):
+    @discord.ui.select( # the decorator that lets you specify the properties of the select menu
+        placeholder = "Select a platform!",
+        min_values = 1, # the minimum number of values that must be selected by the users
+        max_values = 7, # the maximum number of values that can be selected by the users
+        options = [ # the list of options from which users can choose, a required field
+            discord.SelectOption(
+                label="Spotify",
+            ),
+            discord.SelectOption(
+                label="Apple Music",
+            ),
+            discord.SelectOption(
+                label="Youtube Music",
+            ),
+            discord.SelectOption(
+                label="Amazon Music",
+            ),
+            discord.SelectOption(
+                label="Tidal",
+            ),
+            discord.SelectOption(
+                label="SoundCloud",
+            ),
+            discord.SelectOption(
+                label="Pandora",
+            )
+        ]
+    )
+    async def select_callback(self, select, interaction): # the function called when the user is done selecting options
+        await interaction.response.send_message(f"got it boss👍 {select.values}", ephemeral=True)
+@bot.slash_command(name="manage_platforms", guild_ids= [585594090863853588])
+async def manage_platforms(ctx):
+    modal = ManagePlatformsView()
+    await ctx.respond("Select which platforms to both detect links from, and suggest links for",view=modal, ephemeral=True)
+@bot.slash_command(name="ignore_channel", guild_ids= [585594090863853588])
+async def manage_platforms(ctx):
+    await ctx.respond(f"Will now ignored links sent in {ctx.channel.id}", ephemeral=True)
+@bot.slash_command(name="allow_channel", guild_ids= [585594090863853588])
+async def manage_platforms(ctx):
+    await ctx.respond(f"Will now allow links sent in {ctx.channel.id}", ephemeral=True)
+bot.run(token)
