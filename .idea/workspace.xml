@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="b1c0b467-5e81-45ab-bdda-3f3327793ca4" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/SpotifyLinkDiscBot.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/SpotifyLinkDiscBot.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+    <list default="true" id="b1c0b467-5e81-45ab-bdda-3f3327793ca4" name="Changes" comment="Start of server config">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
@@ -27,18 +23,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "AmazingSupDawg"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;AmazingSupDawg&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/AmazingSupDawg/MusicLink.git",
-    "accountId": "54402dde-c1b9-45dc-880c-9f837751edfe"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/AmazingSupDawg/MusicLink.git&quot;,
+    &quot;accountId&quot;: &quot;54402dde-c1b9-45dc-880c-9f837751edfe&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 1
 }</component>
@@ -55,8 +51,8 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "master",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/jackk/SpotifyLinkDiscBot",
-    "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
+    "last_opened_file_path": "C:/Users/jackk/CarCount",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -80,9 +76,40 @@
       <option name="presentableId" value="Default" />
       <updated>1721608833291</updated>
     </task>
+    <task id="LOCAL-00001" summary="Message &amp; RXN detection :)">
+      <option name="closed" value="true" />
+      <created>1721613190026</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1721613190026</updated>
+    </task>
+    <task id="LOCAL-00002" summary="basic functionality of finding and sending an embed w/ reasonable color">
+      <option name="closed" value="true" />
+      <created>1721662213971</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1721662213971</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Start of server config">
+      <option name="closed" value="true" />
+      <created>1721748250834</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1721748250834</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="UnknownFeatures">
     <option featureType="com.intellij.fileTypeFactory" implementationName=".env" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Message &amp; RXN detection :)" />
+    <MESSAGE value="basic functionality of finding and sending an embed w/ reasonable color" />
+    <MESSAGE value="Start of server config" />
+    <option name="LAST_COMMIT_MESSAGE" value="Start of server config" />
   </component>
 </project>

@@ -1,5 +1,5 @@
 #https://discord.com/oauth2/authorize?client_id=1264744396365238365&permissions=67648&integration_type=0&scope=bot
-import discord, requests, os
+import discord, requests, os, json
 from dotenv import load_dotenv
 from colorthief import ColorThief
 
@@ -18,7 +18,8 @@ load_dotenv()
 token = os.getenv('DISC_TOKEN')
 
 validLinks = ["https://music.apple.com/","https://open.spotify.com/", "https://music.youtube.com/","https://www.youtube.com/"]
-preferedOutputPlatforms = ["spotify", "appleMusic", "youtubeMusic"]
+defaultPlatforms = ["spotify", "appleMusic", "youtubeMusic"]
+
 
 def findLink(message: discord.message) -> [str]:
     links = []
@@ -29,47 +30,69 @@ def findLink(message: discord.message) -> [str]:
                 if item.startswith(validLink):
                     links.append(item)
     return links
-def worthySearch(message:discord.Message) -> bool:
+def worthySearch(message:discord.Message) -> bool :
     for link in validLinks:
         if link in message.content:
             return True
 
-def findURLS(link) -> {str:str}:
+def findURLS(link: str, mesage: discord.Message) -> dict | None:
     songURLs = {}
     response = requests.get("https://api.song.link/v1-alpha.1/links?url=" + link)
     if response.ok:
         response = response.json()
         for platform in response["linksByPlatform"]:
             #Implement filtering by server preference
-            if platform in preferedOutputPlatforms:
+            preferences = fetchPreferences(mesage)
+            if preferences == None:
+                return {}
+            if platform in preferences:
                 songURLs[platform] = response["linksByPlatform"][platform]["url"]
 
-        for thumnailProvier in response["entitiesByUniqueId"]:
-            songURLs["thumbnailURL"] = response["entitiesByUniqueId"][thumnailProvier]["thumbnailUrl"]
+        for thumnailProvdier in response["entitiesByUniqueId"]:
+            songURLs["thumbnailURL"] = response["entitiesByUniqueId"][thumnailProvdier]["thumbnailUrl"]
             break
         return songURLs
 
+def isChannelBanned(message: discord.Message) -> bool:
+    try:
+        with open(f"config.json", "r") as f:
+            jsonValues = json.load(f)
+            return message.channel.id in jsonValues[message.guild.id]["bannedChannels"]
+    except json.decoder.JSONDecodeError:
+        return True
+    except KeyError:
+        return False
+def fetchPreferences(message: discord.Message) -> list | None:
+    try:
+        with open(f"config.json", "r") as f:
+            jsonValues = json.load(f)
+            try:
+                return jsonValues[message.guild.id]["preferredPlatforms"]
+            except KeyError:
+                return defaultPlatforms
+    except json.decoder.JSONDecodeError:
+        return None
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
 
 @bot.event
 async def on_message(message):
-    if message.author == bot.user:
+    if message.author == bot.user or isChannelBanned(message):
         return
     links = findLink(message)
     if len(links) != 0:
         await message.add_reaction("🔗")
 
 @bot.event
-async def on_reaction_add(reaction, user):
+async def on_reaction_add(reaction: discord.Reaction, user: discord.user):
     if reaction.emoji == "🔗" and user != bot.user:
-        if worthySearch(reaction.message):
+        if (not isChannelBanned(reaction.message)) and worthySearch(reaction.message):
             async with reaction.message.channel.typing():
                 links = findLink(reaction.message)
                 embeds = []
                 for link in links:
-                    urls = findURLS(link)
+                    urls = findURLS(link, reaction.message)
                     urllib.request.urlretrieve(urls["thumbnailURL"], "thumbnail.png")
                     recColor = ColorThief('thumbnail.png').get_color(quality=1)
                     embed = discord.Embed(color= discord.Color.from_rgb(recColor[0],recColor[1],recColor[2]), title= "Music Links", footer= discord.EmbedFooter(text = "Powered by Songlink"))
@@ -99,28 +122,42 @@ class ManagePlatformsView(discord.ui.View):
         options = [ # the list of options from which users can choose, a required field
             discord.SelectOption(
                 label="Spotify",
+                value="spotify"
             ),
             discord.SelectOption(
                 label="Apple Music",
+                value= "appleMusic"
             ),
             discord.SelectOption(
                 label="Youtube Music",
+                value="youtubeMusic"
             ),
             discord.SelectOption(
                 label="Amazon Music",
+                value= "amazonMusic"
             ),
             discord.SelectOption(
                 label="Tidal",
+                value="tidal"
             ),
             discord.SelectOption(
                 label="SoundCloud",
+                value="soundcloud"
             ),
             discord.SelectOption(
                 label="Pandora",
+                value="pandora"
             )
         ]
     )
     async def select_callback(self, select, interaction): # the function called when the user is done selecting options
+        with open(f"config.json", "w+") as f:
+            jsonValues = json.load(f)
+            try:
+                jsonValues[interaction.message.guild.id]["preferredPlatforms"] = select.values
+                json.dump(jsonValues,f, indent= 4)
+            except KeyError:
+                print("idk")
         await interaction.response.send_message(f"got it boss👍 {select.values}", ephemeral=True)
 @bot.slash_command(name="manage_platforms", guild_ids= [585594090863853588])
 async def manage_platforms(ctx):
@@ -132,4 +169,10 @@ async def manage_platforms(ctx):
 @bot.slash_command(name="allow_channel", guild_ids= [585594090863853588])
 async def manage_platforms(ctx):
     await ctx.respond(f"Will now allow links sent in {ctx.channel.id}", ephemeral=True)
+try:
+    f = open("config.json", "x")
+    f.write("{}")
+    f.close()
+except FileExistsError:
+    pass
 bot.run(token)
