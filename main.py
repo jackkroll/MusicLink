@@ -19,6 +19,7 @@ token = os.getenv('DISC_TOKEN')
 
 validLinks = ["https://music.apple.com/","https://open.spotify.com/", "https://music.youtube.com/","https://www.youtube.com/"]
 defaultPlatforms = ["spotify", "appleMusic", "youtubeMusic"]
+thumbnailPreferences = ["appleMusic", "spotify"]
 
 
 def findLink(message: discord.message) -> [str]:
@@ -47,10 +48,21 @@ def findURLS(link: str, mesage: discord.Message) -> dict | None:
                 return {}
             if platform in preferences:
                 songURLs[platform] = response["linksByPlatform"][platform]["url"]
-
+        fallback = None
         for thumnailProvdier in response["entitiesByUniqueId"]:
-            songURLs["thumbnailURL"] = response["entitiesByUniqueId"][thumnailProvdier]["thumbnailUrl"]
-            break
+            try:
+                songURLs["thumbnailURL"] = response["entitiesByUniqueId"][thumnailProvdier]["thumbnailUrl"]
+                songURLs["title"] = response["entitiesByUniqueId"][thumnailProvdier]["title"]
+                if fallback == None:
+                    fallback = songURLs
+                for preference in thumbnailPreferences:
+                    if preference in response["entitiesByUniqueId"][thumnailProvdier]["platforms"]:
+                        return songURLs
+            except KeyError:
+                continue
+        if fallback != None:
+            songURLs = fallback
+
         return songURLs
 
 def isChannelBanned(message: discord.Message) -> bool:
@@ -67,7 +79,7 @@ def fetchPreferences(message: discord.Message) -> list | None:
         with open(f"config.json", "r") as f:
             jsonValues = json.load(f)
             try:
-                return jsonValues[message.guild.id]["preferredPlatforms"]
+                return jsonValues[f"{message.guild.id}"]["preferredPlatforms"]
             except KeyError:
                 return defaultPlatforms
     except json.decoder.JSONDecodeError:
@@ -95,10 +107,10 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.user):
                     urls = findURLS(link, reaction.message)
                     urllib.request.urlretrieve(urls["thumbnailURL"], "thumbnail.png")
                     recColor = ColorThief('thumbnail.png').get_color(quality=1)
-                    embed = discord.Embed(color= discord.Color.from_rgb(recColor[0],recColor[1],recColor[2]), title= "Music Links", footer= discord.EmbedFooter(text = "Powered by Songlink"))
+                    embed = discord.Embed(color= discord.Color.from_rgb(recColor[0],recColor[1],recColor[2]), title= f"{urls["title"]}", footer= discord.EmbedFooter(text = "Powered by Songlink"))
                     desc = ""
                     for platform in urls:
-                        if platform == "thumbnailURL":
+                        if platform in ["thumbnailURL", "title"]:
                             continue
                         platformFormatted = ""
                         for char in platform:
@@ -151,13 +163,16 @@ class ManagePlatformsView(discord.ui.View):
         ]
     )
     async def select_callback(self, select, interaction): # the function called when the user is done selecting options
-        with open(f"config.json", "w+") as f:
+        with open(f"config.json", "r") as f:
             jsonValues = json.load(f)
-            try:
-                jsonValues[interaction.message.guild.id]["preferredPlatforms"] = select.values
-                json.dump(jsonValues,f, indent= 4)
-            except KeyError:
-                print("idk")
+            if str(interaction.message.guild.id) not in jsonValues:
+                jsonValues[interaction.message.guild.id] = {
+                    "preferredPlatforms": [],
+                    "bannedChannels": []
+                }
+            jsonValues[f"{interaction.message.guild.id}"]["preferredPlatforms"] = select.values
+        with open(f"config.json", "w") as f:
+            json.dump(jsonValues, f, indent=4)
         await interaction.response.send_message(f"got it boss👍 {select.values}", ephemeral=True)
 @bot.slash_command(name="manage_platforms", guild_ids= [585594090863853588])
 async def manage_platforms(ctx):
@@ -165,10 +180,33 @@ async def manage_platforms(ctx):
     await ctx.respond("Select which platforms to both detect links from, and suggest links for",view=modal, ephemeral=True)
 @bot.slash_command(name="ignore_channel", guild_ids= [585594090863853588])
 async def manage_platforms(ctx):
+    with open(f"config.json", "r") as f:
+        jsonValues = json.load(f)
+        if str(ctx.guild.id) not in jsonValues:
+            jsonValues[f"{ctx.guild.id}"] = {
+                "preferredPlatforms": [],
+                "bannedChannels": []
+            }
+        jsonValues[f"{ctx.guild.id}"]["bannedChannels"].append(ctx.channel.id)
+    with open(f"config.json", "w") as f:
+        json.dump(jsonValues, f, indent=4)
     await ctx.respond(f"Will now ignored links sent in {ctx.channel.id}", ephemeral=True)
 @bot.slash_command(name="allow_channel", guild_ids= [585594090863853588])
 async def manage_platforms(ctx):
-    await ctx.respond(f"Will now allow links sent in {ctx.channel.id}", ephemeral=True)
+    with open(f"config.json", "r") as f:
+        jsonValues = json.load(f)
+        if str(ctx.guild.id) not in jsonValues:
+            jsonValues[ctx.guild.id] = {
+                "preferredPlatforms": [],
+                "bannedChannels": []
+            }
+    if ctx.channel.id not in jsonValues[f"{ctx.guild.id}"]["bannedChannels"]:
+        jsonValues[f"{ctx.guild.id}"]["bannedChannels"].append(ctx.channel.id)
+        with open(f"config.json", "w") as f:
+            json.dump(jsonValues, f, indent=4)
+        await ctx.respond(f"Will now allow links sent in this channel", ephemeral=True)
+    else:
+        await ctx.respond(f"Links were already allowed in this channel :)", ephemeral=True)
 try:
     f = open("config.json", "x")
     f.write("{}")
